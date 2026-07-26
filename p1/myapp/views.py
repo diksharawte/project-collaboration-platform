@@ -15,11 +15,33 @@ class ProjectListCreateView(generics.ListCreateAPIView):
     serializer_class = ProjectSerializer
     permission_classes = [IsAuthenticated]
 
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
 # Contribution
 class ContributionRequestListCreateView(generics.ListCreateAPIView):
     queryset = ContributionRequest.objects.all()
     serializer_class = ContributionRequestSerializer
     permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user) 
+
+# Contribution Request
+class ContributionRequestUpdateView(generics.RetrieveUpdateAPIView):
+    queryset = ContributionRequest.objects.all()
+    serializer_class = ContributionRequestSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+
+        if instance.status == 'accepted':
+            Contributor.objects.get_or_create(
+                project=instance.project,
+                user=instance.user,
+                defaults={'role': 'Contributor'}
+            )
 
 # Contributor
 class ContributorListCreateView(generics.ListCreateAPIView):

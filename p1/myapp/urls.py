@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import ProjectListCreateView, ContributionRequestListCreateView, ContributorListCreateView, TaskListCreateView, signup, login,ContributionRequestUpdateView
+from .views import ProjectListCreateView, ContributionRequestListCreateView, ContributorListCreateView, TaskListCreateView, signup, login,ContributionRequestUpdateView, MySentRequestsView
 
 urlpatterns = [
 path('signup/', signup, name='signup'),
@@ -9,6 +9,7 @@ path('requests/', ContributionRequestListCreateView.as_view(), name='request-lis
  path('requests/<int:pk>/', ContributionRequestUpdateView.as_view(), name='request-update'),
 path('contributors/', ContributorListCreateView.as_view(), name='contributor-list-create'),
 path('tasks/', TaskListCreateView.as_view(), name='task-list-create'),
+path('my-sent-requests/', MySentRequestsView.as_view(), name='my-sent-requests'),
 
 
 ]

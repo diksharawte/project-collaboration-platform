@@ -1,90 +1,135 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import Signup from './Signup';
-import Login from './Login';
+import Navbar from './Navbar';
+import AuthModal from './AuthModal';
 import CreateProject from './CreateProject';
 import RequestToJoin from './RequestToJoin';
 import MyRequests from './MyRequests';
+import CreateTask from './CreateTask';
+import TaskList from './TaskList';
+import MySentRequests from './MySentRequests';
+import heroImage from "./assets/home.jpg";
 
 function App() {
   const [projects, setProjects] = useState([]);
   const [token, setToken] = useState('');
+  const [username, setUsername] = useState('');
+  const [activeTab, setActiveTab] = useState('Projects');
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [projectRefresh, setProjectRefresh] = useState(0);
 
   const fetchProjects = () => {
     if (token) {
       axios.get('http://127.0.0.1:8000/api/projects/', {
         headers: { Authorization: `Token ${token}` }
-      })
-        .then(response => setProjects(response.data))
-        .catch(error => console.error('Error fetching projects:', error));
+      }).then(res => setProjects(res.data)).catch(() => {});
     }
   };
 
-  useEffect(() => {
-    fetchProjects();
-  }, [token]);
+  useEffect(() => { fetchProjects(); }, [token]);
+
+  const handleLoginSuccess = (newToken, newUsername) => {
+    setToken(newToken);
+    setUsername(newUsername);
+  };
+
+  const handleLogout = () => {
+    setToken('');
+    setUsername('');
+    setProjects([]);
+    setActiveTab('Projects');
+  };
+
+  const triggerRefresh = () => setProjectRefresh(prev => prev + 1);
+
+  const steps = [
+    { step: '01', title: 'Post an idea', desc: "Share what you're building and what skills you need." },
+    { step: '02', title: 'Find your team', desc: 'People request to join based on their skills.' },
+    { step: '03', title: 'Track the build', desc: 'Assign tasks and track every contribution.' }
+  ];
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 20px' }}>
+    <>
+      <Navbar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        token={token}
+        username={username}
+        onLoginClick={() => setShowAuthModal(true)}
+        onLogout={handleLogout}
+      />
 
-      <header style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '32px', letterSpacing: '-0.5px' }}>Blueprint</h1>
-        <p style={{ color: 'var(--blueprint-cyan)', fontFamily: 'var(--font-mono)', fontSize: '13px', marginTop: '4px' }}>
-          post an idea. find your team. track the build.
-        </p>
-      </header>
+      {showAuthModal && (
+        <AuthModal onClose={() => setShowAuthModal(false)} onLoginSuccess={handleLoginSuccess} />
+      )}
 
-      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '24px' }}>
-        <Signup />
-        <Login setToken={setToken} />
+      {!token && (
+  <>
+    <div className="hero">
+      <div className="hero-content">
+        <h2>Find the right people for your next big idea</h2>
+        <p>Post your project, connect with contributors, and track every contribution — like GitHub for finding teammates.</p>
+        <button className="btn-primary" onClick={() => setShowAuthModal(true)}>Get started</button>
       </div>
+      <img src={heroImage} alt="Team collaboration" className="hero-image" />
+    </div>
 
-      <CreateProject token={token} onProjectCreated={fetchProjects} />
-      <MyRequests token={token} />
-
-      <h2 style={{ margin: '32px 0 16px', fontSize: '20px' }}>All projects</h2>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        gap: '20px'
-      }}>
-        {projects.map((project, i) => (
-          <div key={project.id} style={{
-            background: 'var(--paper-white)',
-            borderRadius: '4px',
-            padding: '16px 18px',
-            position: 'relative',
-            transform: `rotate(${i % 2 === 0 ? '-1deg' : '1deg'})`,
-            boxShadow: '0 4px 10px rgba(0,0,0,0.25)'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: '-8px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: '14px',
-              height: '14px',
-              borderRadius: '50%',
-              background: 'var(--rust-red)',
-              boxShadow: '0 2px 3px rgba(0,0,0,0.3)'
-            }} />
-            <p style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
-              color: 'var(--blueprint-cyan)',
-              margin: '0 0 6px',
-              filter: 'brightness(0.7)'
-            }}>project</p>
-            <h3 style={{ color: 'var(--charcoal)', fontSize: '17px', marginBottom: '6px' }}>{project.title}</h3>
-            <p style={{ fontSize: '13px', color: '#555', margin: '0 0 8px' }}>{project.description}</p>
-            <p style={{ fontSize: '12px', color: 'var(--moss-green)', margin: '0 0 10px', fontFamily: 'var(--font-mono)' }}>
-              {project.category} · {project.status}
-            </p>
-            <RequestToJoin token={token} projectId={project.id} />
-          </div>
-        ))}
+    <div className="steps-grid">
+      <div className="step-card"  onClick={() => setShowAuthModal(true)}>
+        <i className="ti ti-bulb step-icon"></i>
+        <h3>Post an idea</h3>
+        <p>Share what you're building and what skills you need.</p>
+      </div>
+      <div className="step-card"  onClick={() => setShowAuthModal(true)}>
+        <i className="ti ti-users step-icon"></i>
+        <h3>Find your team</h3>
+        <p>People request to join based on their skills.</p>
+      </div>
+      <div className="step-card"  onClick={() => setShowAuthModal(true)}>
+        <i className="ti ti-checklist step-icon"></i>
+        <h3>Track the build</h3>
+        <p>Assign tasks and track every contribution.</p>
       </div>
     </div>
+  </>
+)}
+      {token && activeTab === 'Projects' && (
+        <>
+          <CreateProject token={token} onProjectCreated={() => { fetchProjects(); triggerRefresh(); }} />
+
+          <div className="section-title">
+            All projects
+            <span className="count-badge">{projects.length}</span>
+          </div>
+
+          <div className="project-grid">
+            {projects.map(project => (
+              <div key={project.id} className="project-card">
+                <div className="pin" />
+                <p className="project-label">project</p>
+                <h3>{project.title}</h3>
+                <p className="desc">{project.description}</p>
+                <div>
+                  <span className="project-meta">{project.category} · {project.status}</span>
+                </div>
+                <RequestToJoin token={token} projectId={project.id} />
+                <TaskList token={token} projectId={project.id} refreshTrigger={projectRefresh} />
+                <CreateTask token={token} projectId={project.id} />
+              </div>
+            ))}
+          </div>
+
+          {projects.length === 0 && (
+            <p className="empty-note" style={{ padding: '32px 0' }}>No projects yet. Create your first one above!</p>
+          )}
+        </>
+      )}
+
+      {token && activeTab === 'My Requests' && <MyRequests token={token} />}
+      {token && activeTab === 'Sent Requests' && (
+        <MySentRequests token={token} />
+        )}
+    </>
   );
 }
 

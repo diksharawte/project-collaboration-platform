@@ -7,20 +7,24 @@ class ProjectSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['owner']
 
-
 class ContributionRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContributionRequest
         fields = '__all__'
         read_only_fields = ['user', 'status']
 
+class ContributionRequestUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContributionRequest
+        fields = '__all__'
+        read_only_fields = ['user', 'project']
 
 class ContributorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contributor
-        fields = '__all__'        
+        fields = '__all__'
 
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
-        fields = '__all__'        
+        fields = '__all__'

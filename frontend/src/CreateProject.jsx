@@ -8,60 +8,40 @@ function CreateProject({ token, onProjectCreated }) {
   const [message, setMessage] = useState('');
 
   const handleCreate = async () => {
+    if (!title.trim()) return;
     try {
-      const response = await axios.post(
+      await axios.post(
         'http://127.0.0.1:8000/api/projects/',
-        {
-          title: title,
-          description: description,
-          category: category,
-          status: 'open'
-        },
-        {
-          headers: {
-            Authorization: `Token ${token}`
-          }
-        }
+        { title, description, category, status: 'open' },
+        { headers: { Authorization: `Token ${token}` } }
       );
-      setMessage('Project created successfully!');
+      setMessage('Project created!');
       setTitle('');
       setDescription('');
       setCategory('');
       onProjectCreated();
-    } catch (error) {
-      setMessage('Failed to create project: ' + JSON.stringify(error.response.data));
+    } catch (err) {
+      setMessage('Failed: ' + JSON.stringify(err.response?.data || err.message));
     }
   };
 
- if (!token) {
-  return <p style={{ color: 'var(--blueprint-cyan)', fontFamily: 'var(--font-mono)', fontSize: '13px' }}>Login to create a project.</p>;
-}
-
   return (
-    <div style={{ border: '1px solid blue', padding: '10px', margin: '10px' }}>
-      <h2>Create New Project</h2>
-      <input
-        type="text"
-        placeholder="Project Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-      <br />
-      <textarea
-        placeholder="Description"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-      />
-      <br />
-      <input
-        type="text"
-        placeholder="Category (e.g. Web App)"
-        value={category}
-        onChange={(e) => setCategory(e.target.value)}
-      />
-      <br />
-      <button onClick={handleCreate}>Create Project</button>
-      <p>{message}</p>
+    <div className="panel">
+      <h2>Post a new project</h2>
+      <div className="form-row">
+        <input type="text" placeholder="Project title" value={title} onChange={e => setTitle(e.target.value)} />
+        <input type="text" placeholder="Category (e.g. Web app)" value={category} onChange={e => setCategory(e.target.value)} />
+      </div>
+      <div className="form-row">
+        <textarea
+          placeholder="What are you building? What help do you need?"
+          value={description}
+          onChange={e => setDescription(e.target.value)}
+          rows="3"
+        />
+      </div>
+      <button className="btn-primary" onClick={handleCreate}>Create project</button>
+      {message && <p className={message.startsWith('Failed') ? 'error-note' : 'success-note'}>{message}</p>}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import generics
 from .models import Project, ContributionRequest, Contributor, Task
-from .serializers import ProjectSerializer, ContributionRequestSerializer, ContributorSerializer, TaskSerializer
+from .serializers import ProjectSerializer, ContributionRequestSerializer, ContributorSerializer, TaskSerializer, ContributionRequestUpdateSerializer
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
@@ -20,22 +20,30 @@ class ProjectListCreateView(generics.ListCreateAPIView):
 
 # Contribution
 class ContributionRequestListCreateView(generics.ListCreateAPIView):
-    queryset = ContributionRequest.objects.all()
     serializer_class = ContributionRequestSerializer
     permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        return ContributionRequest.objects.filter(project__owner=self.request.user)
+
     def perform_create(self, serializer):
         serializer.save(user=self.request.user) 
+# MySentRequests
+class MySentRequestsView(generics.ListAPIView):
+    serializer_class = ContributionRequestSerializer
+    permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        return ContributionRequest.objects.filter(user=self.request.user)
+        
 # Contribution Request
 class ContributionRequestUpdateView(generics.RetrieveUpdateAPIView):
     queryset = ContributionRequest.objects.all()
-    serializer_class = ContributionRequestSerializer
+    serializer_class = ContributionRequestUpdateSerializer
     permission_classes = [IsAuthenticated]
 
     def perform_update(self, serializer):
         instance = serializer.save()
-
         if instance.status == 'accepted':
             Contributor.objects.get_or_create(
                 project=instance.project,

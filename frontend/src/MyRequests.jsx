@@ -8,13 +8,12 @@ function MyRequests({ token }) {
     if (token) {
       axios.get('http://127.0.0.1:8000/api/requests/', {
         headers: { Authorization: `Token ${token}` }
-      }).then(response => setRequests(response.data));
+      }).then(res => setRequests(res.data))
+        .catch(err => console.error('Fetch failed:', err));
     }
   };
 
-  useEffect(() => {
-    fetchRequests();
-  }, [token]);
+  useEffect(() => { fetchRequests(); }, [token]);
 
   const handleUpdate = async (requestId, newStatus) => {
     try {
@@ -24,66 +23,29 @@ function MyRequests({ token }) {
         { headers: { Authorization: `Token ${token}` } }
       );
       fetchRequests();
-    } catch (error) {
-      console.error('Failed to update:', error);
+    } catch (err) {
+      console.error('Update failed:', err.response?.data || err.message);
+      alert('Failed to update: ' + JSON.stringify(err.response?.data || err.message));
     }
   };
 
   if (!token) return null;
 
-  const statusColor = (s) => {
-    if (s === 'accepted') return 'var(--moss-green)';
-    if (s === 'rejected') return 'var(--rust-red)';
-    return 'var(--marigold)';
-  };
-
   return (
-    <div style={{
-      background: 'var(--paper-white)',
-      borderRadius: '6px',
-      padding: '16px 18px',
-      margin: '24px 0'
-    }}>
-      <h2 style={{ color: 'var(--charcoal)', fontSize: '18px', marginBottom: '12px' }}>
-        Contribution requests
-      </h2>
-      {requests.length === 0 && (
-        <p style={{ fontSize: '13px', color: '#777' }}>No requests yet.</p>
-      )}
+    <div className="panel">
+      <h2>Contribution requests</h2>
+      {requests.length === 0 && <p className="empty-note">No requests yet.</p>}
       {requests.map(req => (
-        <div key={req.id} style={{
-          borderTop: '1px solid #ddd',
-          padding: '10px 0',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '8px'
-        }}>
+        <div key={req.id} className="request-row">
           <div>
-            <p style={{ fontSize: '13px', margin: 0, color: 'var(--charcoal)' }}>
-              Project #{req.project} · User #{req.user}
-            </p>
-            <p style={{ fontSize: '12px', margin: '2px 0 0', color: '#666' }}>{req.message}</p>
-            <span style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
-              color: statusColor(req.status)
-            }}>
-              {req.status}
-            </span>
+            <p className="request-meta"><strong>Project #{req.project}</strong> · User #{req.user}</p>
+            <p className="request-message">{req.message}</p>
+            <span className={`status-badge ${req.status}`}>{req.status}</span>
           </div>
           {req.status === 'pending' && (
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <button onClick={() => handleUpdate(req.id, 'accepted')} style={{ fontSize: '12px', padding: '6px 10px' }}>
-                Accept
-              </button>
-              <button
-                onClick={() => handleUpdate(req.id, 'rejected')}
-                style={{ fontSize: '12px', padding: '6px 10px', background: 'var(--rust-red)', color: 'var(--paper-white)' }}
-              >
-                Reject
-              </button>
+            <div className="btn-row">
+              <button className="btn-success btn-xs" onClick={() => handleUpdate(req.id, 'accepted')}>Accept</button>
+              <button className="btn-danger btn-xs" onClick={() => handleUpdate(req.id, 'rejected')}>Reject</button>
             </div>
           )}
         </div>
